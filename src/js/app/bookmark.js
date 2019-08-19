@@ -57,9 +57,17 @@ define(function() {
 
   const importHAR = (storageProvider, harContent) => (harContent) => {
     const har = JSON.parse(_escapeJsonContent(harContent));
+    if(_isRestingFormat(har.log.creator)) {
+      const bookmarks = importObj(har);
+      // FINIRE
+    }
     const harEntries = har.log.entries;
     const bookmarks = harEntries.map(entry => _convertHarEntry(storageProvider, entry));
     return bookmarks;
+  };
+
+  const _isRestingFormat = (creatorFields = {}) => {
+    return creatorFields.name == 'Resting WebExtension' && creatorFields.version == '1.0';
   };
 
   const _escapeJsonContent = (content) => {
@@ -80,14 +88,20 @@ define(function() {
     return bookmark;
   };
 
-  const _convertHarRequest = (harRequest) => {
+  const _convertHarRequest = (harRequest = {}) => {
     const request = {};
-    const querystringIndex = harRequest.url.indexOf('?');
-    const endUrlIndex = querystringIndex != -1 ? querystringIndex : harRequest.url.length;
-    request.url = harRequest.url.substring(0, endUrlIndex);
+    if(harRequest.url) {
+      const querystringIndex = harRequest.url.indexOf('?');
+      const endUrlIndex = querystringIndex != -1 ? querystringIndex : harRequest.url.length;
+      request.url = harRequest.url.substring(0, endUrlIndex);
+    }
     request.method = harRequest.method;
-    request.querystring = harRequest.queryString.map((qs) => ({name: qs.name, value: qs.value}));
-    request.headers = harRequest.headers.map(header => ({name: header.name, value: header.value}));
+    if(harRequest.queryString) {
+      request.querystring = harRequest.queryString.map((qs) => ({name: qs.name, value: qs.value}));
+    }
+    if(harRequest.headers) {
+      request.headers = harRequest.headers.map(header => ({name: header.name, value: header.value}));
+    }
     if(harRequest.postData) {
       request.headers.push({name:'Content-Type', value: harRequest.postData.mimeType});
       request.body = harRequest.postData.text;
@@ -97,12 +111,13 @@ define(function() {
 
   const exportObj = (bookmarks = [], contexts = []) => {
       let harExport = {};
-      harExport.version = '1.1';
-      harExport.creator = {};
-      harExport.creator.name = 'Resting WebExtension';
-      harExport.creator.version = '1.0';
-      harExport.entries = _bookmarkToHar(bookmarks);
-      harExport._contexts = _contextsToHar(contexts);
+      harExport.log = {};
+      harExport.log.version = '1.1';
+      harExport.log.creator = {};
+      harExport.log.creator.name = 'Resting WebExtension';
+      harExport.log.creator.version = '1.0';
+      harExport.log.entries = _bookmarkToHar(bookmarks);
+      harExport.log._contexts = _contextsToHar(contexts);
       return harExport;
   };
 
@@ -126,23 +141,27 @@ define(function() {
       bookmarkExport._id = sources[0].id;
       bookmarkExport._created = sources[0].created;
       bookmarkExport._folder = sources[0].folder;
-      bookmarkExport.headerSize = -1; // not supported
-      bookmarkExport.bodySize = -1; // not supported
+      bookmarkExport.startedDateTime = ""; // not supported
+      bookmarkExport.request = {headerSize: -1, bodySize: -1};
+      bookmarkExport.response = {};
+      bookmarkExport.cache = {};
+      bookmarkExport.timings = {};
+      bookmarkExport.time = -1;
       if(sources[0].request) {
-        bookmarkExport.url = sources[0].request.url;
-        bookmarkExport.method = sources[0].request.method;
-        bookmarkExport.headers = sources[0].request.headers.map(h => ({name: h.name, value: h.value, _enabled: h.enabled}));
-        bookmarkExport.queryString = sources[0].request.querystring.map(q => ({name: q.name, value: q.value, _enabled: q.enabled}));
+        bookmarkExport.request.url = sources[0].request.url;
+        bookmarkExport.request.method = sources[0].request.method;
+        bookmarkExport.request.headers = sources[0].request.headers.map(h => ({name: h.name, value: h.value, _enabled: h.enabled}));
+        bookmarkExport.request.queryString = sources[0].request.querystring.map(q => ({name: q.name, value: q.value, _enabled: q.enabled}));
         if(sources[0].request.body) {
-          bookmarkExport.postData = {};
-          bookmarkExport.postData.mimeType = _getMimeType(sources[0].request.bodyType);
-          if(bookmarkExport.postData.mimeType === 'application/x-www-form-urlencoded' || bookmarkExport.postData.mimeType === 'multipart/form-data') {
-            bookmarkExport.postData.params = sources[0].request.body.map(p => ({name: p.name, value: p.value, _enabled: p.enabled}));;
+          bookmarkExport.request.postData = {};
+          bookmarkExport.request.postData.mimeType = _getMimeType(sources[0].request.bodyType);
+          if(bookmarkExport.request.postData.mimeType === 'application/x-www-form-urlencoded' || bookmarkExport.request.postData.mimeType === 'multipart/form-data') {
+            bookmarkExport.request.postData.params = sources[0].request.body.map(p => ({name: p.name, value: p.value, _enabled: p.enabled}));;
           } else {
-            bookmarkExport.postData.text = sources[0].request.body;
+            bookmarkExport.request.postData.text = sources[0].request.body;
           }
         }
-        bookmarkExport._authentication = sources[0].request.authentication;
+        bookmarkExport.request._authentication = sources[0].request.authentication;
       }
 
       exported.push(bookmarkExport);
@@ -182,13 +201,15 @@ define(function() {
 
   const importObj = (obj = {}) => {
       let importObj = {};
-      if(obj.entries) {
-        const indexRelationship = _extractRelationship(obj.entries);
-        importObj.bookmarks = obj.entries.map(e => _importEntry(e));
+      const entries = obj.log ? obj.log.entries : undefined;
+      const contexts = obj.log ? obj.log._contexts : undefined;
+      if(entries) {
+        const indexRelationship = _extractRelationship(entries);
+        importObj.bookmarks = entries.map(e => _importEntry(e));
         importObj.bookmarks = _fixStructure(importObj.bookmarks, indexRelationship);
       }
-      if(obj._contexts) {
-        importObj.contexts = obj._contexts.map(e => _importContext(e));
+      if(contexts) {
+        importObj.contexts = contexts.map(e => _importContext(e));
       }
       return importObj;
   };
@@ -233,11 +254,6 @@ define(function() {
     return relationMapping;
   };
 
-  // importEntry dovrebbe ritornare una tupla, lista flat
-  // bookmarks e mappa relazini
-  // ATTENZIONE: importEntry lavora su singola entry
-  // SCRITTO FUNZIONE
-
   const _importEntry = (entry = {}) => {
     let bookmark = {};
     bookmark.request = {};
@@ -253,28 +269,29 @@ define(function() {
     if(entry._created) {
       bookmark.created = entry._created;
     }
-    if(entry.url) {
-      bookmark.request.url = entry.url;
+    const entryRequest = entry.request;
+    if(entryRequest.url) {
+      bookmark.request.url = entryRequest.url;
     }
-    if(entry.method) {
-      bookmark.request.method = entry.method;
+    if(entryRequest.method) {
+      bookmark.request.method = entryRequest.method;
     }
-    if(entry.headers) {
-      bookmark.request.headers = entry.headers.map(h => ({name: h.name, value: h.value, enabled: h._enabled}));
+    if(entryRequest.headers) {
+      bookmark.request.headers = entryRequest.headers.map(h => ({name: h.name, value: h.value, enabled: h._enabled}));
     }
 
-    if(entry.queryString) {
-      bookmark.request.querystring = entry.queryString.map(h => ({name: h.name, value: h.value, enabled: h._enabled}));
+    if(entryRequest.queryString) {
+      bookmark.request.querystring = entryRequest.queryString.map(h => ({name: h.name, value: h.value, enabled: h._enabled}));
     }
-    if(entry._authentication) {
-      bookmark.request.authentication = entry._authentication;
+    if(entryRequest._authentication) {
+      bookmark.request.authentication = entryRequest._authentication;
     }
-    if(entry.postData) {
-      bookmark.request.bodyType = _getBodyType(entry.postData.mimeType);
-      if(entry.postData.mimeType === 'multipart/form-data' || entry.postData.mimeType === 'application/x-www-form-urlencoded') {
-        bookmark.request.body = JSON.stringify(entry.postData.params.map(p => ({name: p.name, value: p.value, enabled: p._enabled})));
+    if(entryRequest.postData) {
+      bookmark.request.bodyType = _getBodyType(entryRequest.postData.mimeType);
+      if(entryRequest.postData.mimeType === 'multipart/form-data' || entryRequest.postData.mimeType === 'application/x-www-form-urlencoded') {
+        bookmark.request.body = JSON.stringify(entryRequest.postData.params.map(p => ({name: p.name, value: p.value, enabled: p._enabled})));
       } else {
-        bookmark.request.body = entry.postData.text;
+        bookmark.request.body = entryRequest.postData.text;
       }
     }
     return bookmark;

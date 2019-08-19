@@ -11,10 +11,10 @@
     const showBookmarkDeleteDialog = ko.observable(false);
     const showFolderDialog = ko.observable(false);
     const showImportDialog = ko.observable(false);
+    const showExportDialog = ko.observable(false);
     const folderName = ko.observable();
     const importSrc = ko.observable('har');
-
-
+    const exportSrc = ko.observable('har');
 
     // contextual menu
     const showContextMenu = ko.observable(false);
@@ -25,7 +25,6 @@
     const bookmarks = params.bookmarks;
 
     const deleteChildrenBookmarks = ko.observable();
-
 
     const bookmarkProvider = makeBookmarkProvider(storage);
 
@@ -98,6 +97,10 @@
       document.getElementById("import-file").value = '';
     }
 
+     const dismissExportDialog = () => {
+      showExportDialog(false);
+    }
+
     const deleteBookmark = (bookmark, deleteChildrenBookmarks) => {
       if(bookmark.folder) {
         const containerFolder = bookmarks().find( b => b.id === bookmark.folder);
@@ -134,8 +137,17 @@
       dismissImportDialog();
     };
 
+    const exportBookmarks = () => {
+      _handleExport();
+      dismissExportDialog();
+    };
+
     const importDialog = () => {
       showImportDialog(true);
+    };
+
+    const exportDialog = () => {
+      showExportDialog(true);
     };
 
     const loadBookmarkObj = (bookmarkObj) => {
@@ -185,6 +197,21 @@
         document.getElementById("import-file").value = '';
       };
 
+    const _handleExport = () => {
+        const exportContent = JSON.stringify(bookmarkProvider.exportObj(bookmarks()));
+        const exportFile = new File([exportContent], "export.resting.json", {
+          type: "application/json",
+        });
+
+        const url = URL.createObjectURL(exportFile);
+
+        chrome.downloads.download({
+            filename: exportFile.name,
+            url: url,
+            saveAs: true
+        });
+    };
+
     $(() => {
       const screenWidth = screen.width;
       const dialogLeftPosition = screenWidth / 2  - 200;
@@ -221,12 +248,16 @@
     return {
       showFolderDialog,
       showImportDialog,
+      showExportDialog,
       folderName,
       folderDialog,
       importDialog,
+      exportDialog,
       dismissFolderDialog,
       dismissImportDialog,
+      dismissExportDialog,
       importSrc,
+      exportSrc,
       addFolderOnEnter,
       addFolder,
       bookmarks,
@@ -241,6 +272,7 @@
       loadBookmarkObj,
       expandFolder,
       importBookmarks,
+      exportBookmarks,
       // context menu
       contextMenu,
       showContextMenu,
