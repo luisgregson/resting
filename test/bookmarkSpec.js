@@ -285,7 +285,7 @@ describe("Import HAR", function() {
 }`;
 
     const bookmarkProvider = makeBookmarkProvider(mockStorageProvider);
-    const bookmarks = bookmarkProvider.importHAR(harContent);
+    const bookmarks = bookmarkProvider.importHAR(harContent).bookmarks;
 
     expect(1).toBe(bookmarks.length);
 
@@ -571,7 +571,7 @@ describe("Import HAR", function() {
 }`;
 
     const bookmarkProvider = makeBookmarkProvider(mockStorageProvider);
-    const bookmarks = bookmarkProvider.importHAR(harContent);
+    const bookmarks = bookmarkProvider.importHAR(harContent).bookmarks;
     expect(2).toBe(bookmarks.length);
   });
 
@@ -669,7 +669,7 @@ describe("Import HAR", function() {
 }`;
 
     const bookmarkProvider = makeBookmarkProvider(mockStorageProvider);
-    const bookmarks = bookmarkProvider.importHAR(harContent);
+    const bookmarks = bookmarkProvider.importHAR(harContent).bookmarks;
     expect(1).toBe(bookmarks.length);
     const bookmark = bookmarks[0];
 
@@ -771,7 +771,7 @@ describe("Import HAR", function() {
 }`;
 
     const bookmarkProvider = makeBookmarkProvider(mockStorageProvider);
-    const bookmarks = bookmarkProvider.importHAR(harContent);
+    const bookmarks = bookmarkProvider.importHAR(harContent).bookmarks;
     expect(1).toBe(bookmarks.length);
     const bookmark = bookmarks[0];
 
@@ -883,7 +883,7 @@ describe("Import HAR", function() {
 }`;
 
     const bookmarkProvider = makeBookmarkProvider(mockStorageProvider);
-    const bookmarks = bookmarkProvider.importHAR(harContent);
+    const bookmarks = bookmarkProvider.importHAR(harContent).bookmarks;
     expect(1).toBe(bookmarks.length);
     const bookmark = bookmarks[0];
 
@@ -1125,7 +1125,7 @@ describe("Import HAR", function() {
 }`;
 
     const bookmarkProvider = makeBookmarkProvider(mockStorageProvider);
-    const bookmarks = bookmarkProvider.importHAR(harContent);
+    const bookmarks = bookmarkProvider.importHAR(harContent).bookmarks;
     expect(2).toBe(bookmarks.length);
     const bookmark = bookmarks[0];
 
@@ -1251,7 +1251,7 @@ describe("Import", function() {
     expect(response.bookmarks[0].request.headers.length).toBe(0);
     expect(response.bookmarks[0].request.querystring.length).toBe(0);
     expect(response.bookmarks[0].request.authentication).toEqual({username:'',password:''});
-    expect(response.bookmarks[0].request.body).toBe('[{"name":"p1","value":"v1","enabled":true},{"name":"p2","value":"v2","enabled":true},{"name":"p3","value":"v3","enabled":true}]');
+    expect(response.bookmarks[0].request.body).toEqual([{"name":"p1","value":"v1","enabled":true},{"name":"p2","value":"v2","enabled":true},{"name":"p3","value":"v3","enabled":true}]);
     expect(response.bookmarks[0].request.bodyType).toBe('form-data');
     expect(response.contexts.length).toBe(0);
   });

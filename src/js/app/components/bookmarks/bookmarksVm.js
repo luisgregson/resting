@@ -187,8 +187,9 @@
         fr.onload = (e) => {
           const content = e.target.result;
           const importedBookmarks = bookmarkProvider.importHAR(content);
-          importedBookmarks.forEach(
+          importedBookmarks.bookmarks.forEach(
             b => {
+              console.log(JSON.stringify(b));
               bookmarkProvider.save(b);
               bookmarks.push(new BookmarkVm(b));
             });

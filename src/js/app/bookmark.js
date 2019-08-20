@@ -58,12 +58,13 @@ define(function() {
   const importHAR = (storageProvider, harContent) => (harContent) => {
     const har = JSON.parse(_escapeJsonContent(harContent));
     if(_isRestingFormat(har.log.creator)) {
-      const bookmarks = importObj(har);
-      // FINIRE
+      return importObj(har);
+    } else {
+      const harEntries = har.log.entries;
+      const bookmarks = harEntries.map(entry => _convertHarEntry(storageProvider, entry));
+      return {bookmarks : bookmarks, contexts : []};
     }
-    const harEntries = har.log.entries;
-    const bookmarks = harEntries.map(entry => _convertHarEntry(storageProvider, entry));
-    return bookmarks;
+    // return bookmarks;
   };
 
   const _isRestingFormat = (creatorFields = {}) => {
@@ -71,14 +72,22 @@ define(function() {
   };
 
   const _escapeJsonContent = (content) => {
-    if(content) {
+    /*if(content) {
       content = content.replace(/\n/g,'');
       content = content.replace(/\t/g,'');
       content = content.replace(/\r/g,'');
       content = content.replace(/"response":\s?{.*},"/,'"response": {},"');
     }
+    return content;*/
 
-    return content;
+    return content.replace(/\\n/g, "\\n")
+        .replace(/\\'/g, "\\'")
+        .replace(/\\"/g, '\\"')
+        .replace(/\\&/g, "\\&")
+        .replace(/\\r/g, "\\r")
+        .replace(/\\t/g, "\\t")
+        .replace(/\\b/g, "\\b")
+        .replace(/\\f/g, "\\f");
   };
   const _convertHarEntry = (storage, entry) => {
     const bookmark = {};
@@ -150,8 +159,12 @@ define(function() {
       if(sources[0].request) {
         bookmarkExport.request.url = sources[0].request.url;
         bookmarkExport.request.method = sources[0].request.method;
-        bookmarkExport.request.headers = sources[0].request.headers.map(h => ({name: h.name, value: h.value, _enabled: h.enabled}));
-        bookmarkExport.request.queryString = sources[0].request.querystring.map(q => ({name: q.name, value: q.value, _enabled: q.enabled}));
+        if(sources[0].request.headers) {
+          bookmarkExport.request.headers = sources[0].request.headers.map(h => ({name: h.name, value: h.value, _enabled: h.enabled}));
+        }
+        if(sources[0].request.querystring) {
+          bookmarkExport.request.queryString = sources[0].request.querystring.map(q => ({name: q.name, value: q.value, _enabled: q.enabled}));
+        }
         if(sources[0].request.body) {
           bookmarkExport.request.postData = {};
           bookmarkExport.request.postData.mimeType = _getMimeType(sources[0].request.bodyType);
@@ -289,7 +302,7 @@ define(function() {
     if(entryRequest.postData) {
       bookmark.request.bodyType = _getBodyType(entryRequest.postData.mimeType);
       if(entryRequest.postData.mimeType === 'multipart/form-data' || entryRequest.postData.mimeType === 'application/x-www-form-urlencoded') {
-        bookmark.request.body = JSON.stringify(entryRequest.postData.params.map(p => ({name: p.name, value: p.value, enabled: p._enabled})));
+        bookmark.request.body = entryRequest.postData.params.map(p => ({name: p.name, value: p.value, enabled: p._enabled}));
       } else {
         bookmark.request.body = entryRequest.postData.text;
       }
