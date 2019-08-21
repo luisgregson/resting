@@ -270,9 +270,8 @@ define(function() {
   const _importEntry = (entry = {}) => {
     let bookmark = {};
     bookmark.request = {};
-    if(entry._isFolder) {
-      bookmark.isFolder = entry._isFolder;
-    }
+    bookmark.isFolder = entry._isFolder;
+    bookmark.folder = entry._folder;
     if(entry._name) {
       bookmark.name = entry._name;
     }

@@ -189,9 +189,11 @@
           const importedBookmarks = bookmarkProvider.importHAR(content);
           importedBookmarks.bookmarks.forEach(
             b => {
-              console.log(JSON.stringify(b));
               bookmarkProvider.save(b);
               bookmarks.push(new BookmarkVm(b));
+              if(b.isFolder) {
+                bacheca.publish('addFolder', b);
+              }
             });
         };
         fr.readAsText(f[0]);
