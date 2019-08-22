@@ -150,20 +150,32 @@ define(function() {
       bookmarkExport._id = sources[0].id;
       bookmarkExport._created = sources[0].created;
       bookmarkExport._folder = sources[0].folder;
-      bookmarkExport.startedDateTime = ""; // not supported
-      bookmarkExport.request = {headerSize: -1, bodySize: -1};
-      bookmarkExport.response = {};
+      bookmarkExport.startedDateTime = "1970-01-01T00:00:00Z"; // not supported
+      bookmarkExport.request = {headersSize: -1, bodySize: -1, httpVersion:'', cookies: [], url: '', method: '', headers: [], queryString: []};
+      bookmarkExport.response = {status: 0, statusText: '', httpVersion:'', cookies:[], headers: [], redirectURL:'', headersSize: -1, bodySize: -1, content: {size: 0, mimeType: ''}};
       bookmarkExport.cache = {};
-      bookmarkExport.timings = {};
+      bookmarkExport.timings = {wait: -1, send: -1, receive: -1};
       bookmarkExport.time = -1;
       if(sources[0].request) {
-        bookmarkExport.request.url = sources[0].request.url;
-        bookmarkExport.request.method = sources[0].request.method;
+        if(sources[0].request.url) {
+          bookmarkExport.request.url = sources[0].request.url;
+        } else {
+          bookmarkExport.request.url = '';
+        }
+        if(sources[0].request.method) {
+          bookmarkExport.request.method = sources[0].request.method;
+        } else {
+          bookmarkExport.request.method = '';
+        }
         if(sources[0].request.headers) {
           bookmarkExport.request.headers = sources[0].request.headers.map(h => ({name: h.name, value: h.value, _enabled: h.enabled}));
+        } else {
+          bookmarkExport.request.headers = [];
         }
         if(sources[0].request.querystring) {
           bookmarkExport.request.queryString = sources[0].request.querystring.map(q => ({name: q.name, value: q.value, _enabled: q.enabled}));
+        } else {
+          bookmarkExport.request.queryString = [];
         }
         if(sources[0].request.body) {
           bookmarkExport.request.postData = {};
