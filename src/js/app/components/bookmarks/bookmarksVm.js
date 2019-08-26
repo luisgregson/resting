@@ -23,6 +23,7 @@
 
     // FIXME: direct ref to bookmarks in appVm
     const bookmarks = params.bookmarks;
+    const contexts = appVm.contexts;
 
     const deleteChildrenBookmarks = ko.observable();
 
@@ -195,13 +196,25 @@
                 bacheca.publish('addFolder', b);
               }
             });
+
+            importedBookmarks.contexts.forEach(c => _saveContext(c));
         };
         fr.readAsText(f[0]);
         document.getElementById("import-file").value = '';
       };
 
+     // FIXME: duplication of appVm function
+    const _saveContext = (context = {}) => {
+      storage.saveContext({name : context.name, variables : context.variables});
+      const contextToEditIdx = contexts().find(ctx => ctx.name === context.name);
+      if(contextToEditIdx > -1) {
+        contexts.replace(contexts[contextToEditIdx],context);
+      }
+    };
+
     const _handleExport = () => {
-        const exportContent = JSON.stringify(bookmarkProvider.exportObj(bookmarks()));
+        const contextsModels = _extractContextFromVM(contexts());
+        const exportContent = JSON.stringify(bookmarkProvider.exportObj(bookmarks(), contextsModels));
         const exportFile = new File([exportContent], "export.resting.json", {
           type: "application/json",
         });
@@ -214,6 +227,15 @@
             saveAs: true
         });
     };
+
+    const _extractContextFromVM = (contexts = []) => {
+      return contexts.map(c => ({name: c.name(), variables: _extractItemFromVM(c.variables())}));
+    };
+
+    const _extractItemFromVM = (items = []) => {
+      return items.map(item => ({name: item.name(),value: item.value(),enabled: item.enabled()}))
+    };
+
 
     $(() => {
       const screenWidth = screen.width;
