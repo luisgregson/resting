@@ -187,6 +187,7 @@ define(function() {
           }
         }
         bookmarkExport.request._authentication = sources[0].request.authentication;
+        bookmarkExport.request._context = sources[0].request.context;
       }
 
       exported.push(bookmarkExport);
@@ -294,6 +295,7 @@ define(function() {
       bookmark.created = entry._created;
     }
     const entryRequest = entry.request;
+    bookmark.request.context = entryRequest._context;
     if(entryRequest.url) {
       bookmark.request.url = entryRequest.url;
     }
