@@ -1,4 +1,14 @@
- define(['knockout', 'app/bookmark', 'app/storage', 'app/bacheca', 'component/bookmarks/bookmarkVm'],function(ko, makeBookmarkProvider, storage, bacheca, BookmarkVm) {
+ define(['knockout', 'app/bookmark', 'app/storage', 'app/bacheca', 'component/bookmarks/bookmarkVm','component/entry-list/entryItemVm'],function(ko, makeBookmarkProvider, storage, bacheca, BookmarkVm, EntryItemVm) {
+
+  // FIXME app.js duplication
+  function ContextVm(name = 'default',variables = []) {
+    const self = this;
+    this.name = ko.observable(name);
+    this.variables = ko.observableArray(variables.map(v => new EntryItemVm(v.name, v.value, v.enabled)));
+    this.isDefault = ko.computed(function() {
+        return this.name() === 'default';
+    }, this);
+  };
 
   return function BookmarksVm(params) {
 
@@ -206,9 +216,12 @@
      // FIXME: duplication of appVm function
     const _saveContext = (context = {}) => {
       storage.saveContext({name : context.name, variables : context.variables});
-      const contextToEditIdx = contexts().find(ctx => ctx.name === context.name);
+      const contextToEditIdx = contexts().find(ctx => ctx.name() === context.name);
+      const contextVm = new ContextVm(context.name, context.variables);
       if(contextToEditIdx > -1) {
-        contexts.replace(contexts[contextToEditIdx],context);
+        contexts.replace(contexts[contextToEditIdx], contextVm);
+      } else {
+        contexts.push(contextVm);
       }
     };
 
