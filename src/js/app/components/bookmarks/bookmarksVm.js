@@ -201,7 +201,13 @@
           importedBookmarks.bookmarks.forEach(
             b => {
               bookmarkProvider.save(b);
-              bookmarks.push(new BookmarkVm(b));
+              const bookmarkToEdit = bookmarks().find(bookmark => bookmark.id === b.id);
+              const bookmarkVm = new BookmarkVm(b);
+              if(bookmarkToEdit) {
+                bookmarks.replace(bookmarkToEdit, bookmarkVm);
+              } else {
+                bookmarks.push(bookmarkVm);
+              }
               if(b.isFolder) {
                 bacheca.publish('addFolder', b);
               }
@@ -216,10 +222,10 @@
      // FIXME: duplication of appVm function
     const _saveContext = (context = {}) => {
       storage.saveContext({name : context.name, variables : context.variables});
-      const contextToEditIdx = contexts().find(ctx => ctx.name() === context.name);
+      const contextToEdit = contexts().find(ctx => ctx.name() === context.name);
       const contextVm = new ContextVm(context.name, context.variables);
-      if(contextToEditIdx > -1) {
-        contexts.replace(contexts[contextToEditIdx], contextVm);
+      if(contextToEdit) {
+        contexts.replace(contextToEdit, contextVm);
       } else {
         contexts.push(contextVm);
       }
