@@ -52,11 +52,23 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
     this.folder = ko.observable('');
   }
 
+/**
+ * quando rimuovo tab attiva diventa precedente se tab chiuso é attivo
+ * quando aggiungo tab attiva diventa ultima
+ */
+  function TabContextVm() {
+    const self = this;
+    this.name = ko.observable('TABBB');
+    this.request = new RequestVm();
+    this.isActive = ko.observable();
+  }
+
   function AppVm() {
     const Resting = {
       contexts : ko.observableArray(),
       selectedContext: new ContextVm(),
       bookmarkSelected : new BookmarkSelectedVm(),
+      tabContexts : ko.observableArray([new TabContextVm()]),
       request : new RequestVm(),
       //response : new ResponseVm(),
       bookmarkCopy: null,   // copy of bookmark object loaded
@@ -633,6 +645,21 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
       storage.saveSettings({showFeedbackDialog : true});
     };
 
+    const newTab = () => {
+      Resting.tabContexts.push(new TabContextVm());
+    }
+
+    const removeTab = (tab) => {
+      Resting.tabContexts.remove(tab);
+    }
+
+    const activeTab = (tabActivated) => {
+      const tabIndex = Resting.tabContexts().indexOf(tabActivated);
+      Resting.tabContexts().forEach(function(tab, idx) {
+        tab.isActive(idx == tabIndex);
+        });
+    };
+
    bacheca.subscribe('loadBookmark', loadBookmarkObj);
    bacheca.subscribe('addFolder', addFolder);
    bacheca.subscribe('deleteFolder', removeFolder);
@@ -667,6 +694,9 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
     Resting.saveContext = saveContext;
     // FIXME: not good to expose this internal function
     Resting._saveBookmark = _saveBookmark;
+    Resting.newTab = newTab;
+    Resting.removeTab = removeTab;
+    Resting.activeTab = activeTab;
 
     Resting.loadBookmarkInView = loadBookmarkInView;
     Resting.isBookmarkLoaded = isBookmarkLoaded;
