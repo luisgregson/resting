@@ -53,14 +53,14 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
   }
 
 /**
- * quando rimuovo tab attiva diventa precedente se tab chiuso é attivo
- * quando aggiungo tab attiva diventa ultima
+ * PROBLEMI con remove and active
+ *
  */
   function TabContextVm() {
     const self = this;
     this.name = ko.observable('TABBB');
-    this.request = new RequestVm();
-    this.isActive = ko.observable();
+    this.request = {};
+    this.isActive = ko.observable(true);
   }
 
   function AppVm() {
@@ -70,6 +70,7 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
       bookmarkSelected : new BookmarkSelectedVm(),
       tabContexts : ko.observableArray([new TabContextVm()]),
       request : new RequestVm(),
+      activeTabIndex : 0,
       //response : new ResponseVm(),
       bookmarkCopy: null,   // copy of bookmark object loaded
                             // used to match with modified version in _saveBookmark
@@ -645,19 +646,42 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
       storage.saveSettings({showFeedbackDialog : true});
     };
 
-    const newTab = () => {
-      Resting.tabContexts.push(new TabContextVm());
-    }
-
-    const removeTab = (tab) => {
-      Resting.tabContexts.remove(tab);
-    }
-
     const activeTab = (tabActivated) => {
       const tabIndex = Resting.tabContexts().indexOf(tabActivated);
       Resting.tabContexts().forEach(function(tab, idx) {
         tab.isActive(idx == tabIndex);
-        });
+      });
+      console.log(`${Resting.activeTabIndex} --> ${tabIndex}`);
+      Resting.activeTabIndex = tabIndex;
+      Resting.parseRequest(tabActivated.request);
+      console.log('request ' + JSON.stringify(Resting.request));
+      console.log('new tab ' + JSON.stringify(tabActivated.request));
+      console.log(`${Resting.request} --> ${tabActivated}`);
+    };
+
+    const newTab = () => {
+      // backup data old tab
+      Resting.tabContexts()[Resting.activeTabIndex].request = request.makeRequest(
+        Resting.request.method(), Resting.request.url(),
+        _extractModelFromVM(Resting.request.headers()), _extractModelFromVM(Resting.request.querystring()), Resting.request.bodyType(),
+        body(Resting.request.bodyType()),_authentication(), Resting.request.context());
+
+      // create new tab
+      const newTabContext = new TabContextVm();
+      Resting.tabContexts.push(newTabContext);
+      activeTab(newTabContext);
+    };
+
+    const removeTab = (tab) => {
+      const tabIndex = Resting.tabContexts().indexOf(tab);
+      if(tabIndex == Resting.activeTabIndex) {
+        if(tabIndex > 0) {
+          activeTab(Resting.tabContexts()[tabIndex -1]);
+        } else if(tabIndex == 0 && Resting.tabContexts().length > 1) {
+           activeTab(Resting.tabContexts()[tabIndex + 1]);
+          }
+      }
+      Resting.tabContexts.remove(tab);
     };
 
    bacheca.subscribe('loadBookmark', loadBookmarkObj);
