@@ -50,6 +50,10 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
     this.id = ko.observable('');
     this.name = ko.observable('');
     this.folder = ko.observable('');
+    
+    this.toModel = () => {
+      return { id: this.id(), name : this.name(), folder : this.folder() };
+    }
   }
 
 /**
@@ -60,6 +64,10 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
     const self = this;
     this.name = ko.observable('TABBB');
     this.request = {};
+    // bookmark stuff
+    this.folderName = ko.observable();
+    this.bookmarkCopy = null;
+    this.bookmarkSelected = new BookmarkSelectedVm();
     this.isActive = ko.observable(true);
   }
 
@@ -67,7 +75,7 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
     const Resting = {
       contexts : ko.observableArray(),
       selectedContext: new ContextVm(),
-      bookmarkSelected : new BookmarkSelectedVm(),
+      bookmarkSelected : new BookmarkSelectedVm(),  // bookmark loaded
       tabContexts : ko.observableArray([new TabContextVm()]),
       request : new RequestVm(),
       activeTabIndex : 0,
@@ -76,9 +84,9 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
                             // used to match with modified version in _saveBookmark
       bookmarks: ko.observableArray(),
       folders: ko.observableArray(),
-      folderSelected: ko.observable(),
-      folderName: ko.observable(),
-      bookmarkName: ko.observable(),
+      folderSelected: ko.observable(),  // used by save dialog
+      folderName: ko.observable(),  // used by loadedBookmark div
+      bookmarkName: ko.observable(),  // used by save dialog
       methods: ko.observableArray(['GET','POST','PUT','DELETE','HEAD','OPTIONS','CONNECT','TRACE','PATCH']),
 
       // request panel flags
@@ -652,8 +660,13 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
         tab.isActive(idx == tabIndex);
       });
       console.log(`${Resting.activeTabIndex} --> ${tabIndex}`);
+      
       Resting.activeTabIndex = tabIndex;
       Resting.parseRequest(tabActivated.request);
+      let bookmark = tabActivated.bookmarkSelected.toModel();
+      bookmark.request = tabActivated.request;
+      loadBookmarkObj(bookmark);
+      
       console.log('request ' + JSON.stringify(Resting.request));
       console.log('new tab ' + JSON.stringify(tabActivated.request));
       console.log(`${Resting.request} --> ${tabActivated}`);
@@ -665,6 +678,11 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
         Resting.request.method(), Resting.request.url(),
         _extractModelFromVM(Resting.request.headers()), _extractModelFromVM(Resting.request.querystring()), Resting.request.bodyType(),
         body(Resting.request.bodyType()),_authentication(), Resting.request.context());
+      
+      Resting.tabContexts()[Resting.activeTabIndex].bookmarkSelected.name(Resting.bookmarkName());
+      Resting.tabContexts()[Resting.activeTabIndex].bookmarkSelected.folder(Resting.folderSelected());
+      //const name = _folderName(Resting.folderSelected());
+      //Resting.tabContexts()[Resting.activeTabIndex].folderName(name ? name : '--');
 
       // create new tab
       const newTabContext = new TabContextVm();
