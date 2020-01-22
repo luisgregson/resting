@@ -67,9 +67,7 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
 
     // bookmark stuff
     this.folderName = ko.observable();
-    this.bookmarkCopy = null;
     this.bookmarkSelected = new BookmarkSelectedVm();
-    this.bookmark = null;
 
     this.isActive = ko.observable(true);
   }
@@ -90,7 +88,6 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
       folderSelected: ko.observable(),  // used by save dialog
       folderName: ko.observable(),  // used by loadedBookmark div
       bookmarkName: ko.observable(),  // used by save dialog
-      bookmark : null,  // activeLoadedBookmark
       methods: ko.observableArray(['GET','POST','PUT','DELETE','HEAD','OPTIONS','CONNECT','TRACE','PATCH']),
 
       // request panel flags
@@ -364,7 +361,6 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
       Resting.folderName(name ? name : '--');
       _saveBookmark(bookmarkObj);
 
-      Resting.bookmark = bookmarkObj;
       // close the dialog
       Resting.showBookmarkDialog(false);
     };
@@ -675,10 +671,8 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
       } else {
         Resting.tabContexts()[Resting.activeTabIndex].bookmarkSelected.id('');
       }
-      //Resting.tabContexts()[Resting.activeTabIndex].bookmarkCopy = Resting.bookmarkCopy;
       Resting.tabContexts()[Resting.activeTabIndex].bookmarkSelected.name(Resting.bookmarkName());
       Resting.tabContexts()[Resting.activeTabIndex].bookmarkSelected.folder(Resting.folderSelected());
-      // Resting.tabContexts()[Resting.activeTabIndex].bookmark = Resting.bookmark;
 
       const tabIndex = Resting.tabContexts().indexOf(tabActivated);
       Resting.tabContexts().forEach(function(tab, idx) {
@@ -690,7 +684,8 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
       if(bookmark.id.length > 0) {
         loadBookmarkObj(bookmark);
       } else {
-        Resting.parseRequest(tabActivated.request);
+        reset();
+        parseRequest(tabActivated.request);
       }
     };
 
