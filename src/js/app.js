@@ -64,7 +64,8 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
     const self = this;
     this.name = ko.observable('TABBB');
     this.request = {};
-
+    this.response = {};
+    
     // bookmark stuff
     this.folderName = ko.observable();
     this.bookmarkSelected = new BookmarkSelectedVm();
@@ -429,8 +430,14 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
         ),
         Resting.request.bodyType(),
         Resting.dataToSend(mapping),
-        _authentication(mapping), _displayResponse
+        _authentication(mapping), _manageResponse
       );
+    };
+    
+    const _manageResponse = (response) => {
+      const activeTab = _activeTab();
+      activeTab.response = response;
+      _displayResponse(response);
     };
 
     // Note that elements order is important
@@ -687,6 +694,7 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
         reset();
         parseRequest(tabActivated.request);
       }
+      _displayResponse(Resting.tabContexts()[Resting.activeTabIndex].response);
     };
 
     const newTab = () => {
@@ -706,6 +714,8 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
       }
       Resting.tabContexts.remove(tab);
     };
+    
+    const _activeTab =  () => Resting.tabContexts()[Resting.activeTabIndex];
 
    bacheca.subscribe('loadBookmark', loadBookmarkObj);
    bacheca.subscribe('addFolder', addFolder);
