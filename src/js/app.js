@@ -54,6 +54,12 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
     this.toModel = () => {
       return { id: this.id(), name : this.name(), folder : this.folder() };
     }
+
+    this.reset = () => {
+      this.id('');
+      this.name('');
+      this.folder('');
+    };
   }
 
 /**
@@ -65,12 +71,19 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
     this.name = ko.observable('TABBB');
     this.request = {};
     this.response = {};
-    
+
     // bookmark stuff
     this.folderName = ko.observable();
     this.bookmarkSelected = new BookmarkSelectedVm();
 
     this.isActive = ko.observable(true);
+
+    this.reset = () => {
+      this.request = {};
+      this.response = {};
+      this.folderName('');
+      this.bookmarkSelected.reset();
+    };
   }
 
   function AppVm() {
@@ -375,7 +388,13 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
       Resting.bookmarkSelected.id('');
 
       clearRequest();
+      _tabReset();
       bacheca.publish('reset');
+    };
+
+    const _tabReset = () => {
+      const tab = _activeTab();
+      tab.reset();
     };
 
     // used by _saveBookmark...why ?
@@ -433,7 +452,7 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
         _authentication(mapping), _manageResponse
       );
     };
-    
+
     const _manageResponse = (response) => {
       const activeTab = _activeTab();
       activeTab.response = response;
@@ -668,18 +687,19 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
 
     const activeTab = (tabActivated) => {
        // backup data old tab
-      Resting.tabContexts()[Resting.activeTabIndex].request = request.makeRequest(
+      const previousActiveTab = _activeTab();
+      previousActiveTab.request = request.makeRequest(
         Resting.request.method(), Resting.request.url(),
         _extractModelFromVM(Resting.request.headers()), _extractModelFromVM(Resting.request.querystring()), Resting.request.bodyType(),
         body(Resting.request.bodyType()),_authentication(), Resting.request.context());
 
       if(Resting.bookmarkCopy) {
-        Resting.tabContexts()[Resting.activeTabIndex].bookmarkSelected.id(Resting.bookmarkCopy.id);
+        previousActiveTab.bookmarkSelected.id(Resting.bookmarkCopy.id);
       } else {
-        Resting.tabContexts()[Resting.activeTabIndex].bookmarkSelected.id('');
+        previousActiveTab.bookmarkSelected.id('');
       }
-      Resting.tabContexts()[Resting.activeTabIndex].bookmarkSelected.name(Resting.bookmarkName());
-      Resting.tabContexts()[Resting.activeTabIndex].bookmarkSelected.folder(Resting.folderSelected());
+      previousActiveTab.bookmarkSelected.name(Resting.bookmarkName());
+      previousActiveTab.bookmarkSelected.folder(Resting.folderSelected());
 
       const tabIndex = Resting.tabContexts().indexOf(tabActivated);
       Resting.tabContexts().forEach(function(tab, idx) {
@@ -694,9 +714,15 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
         reset();
         parseRequest(tabActivated.request);
       }
-      _displayResponse(Resting.tabContexts()[Resting.activeTabIndex].response);
+
+      if(! _isEmptyObj(tabActivated.response)) {
+        _displayResponse(tabActivated.response);
+      }
     };
 
+    const _isEmptyObj = (obj) => {
+      return Object.keys(obj).length == 0;
+    };
     const newTab = () => {
       const newTabContext = new TabContextVm();
       Resting.tabContexts.push(newTabContext);
@@ -714,7 +740,7 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
       }
       Resting.tabContexts.remove(tab);
     };
-    
+
     const _activeTab =  () => Resting.tabContexts()[Resting.activeTabIndex];
 
    bacheca.subscribe('loadBookmark', loadBookmarkObj);
