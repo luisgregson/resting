@@ -68,7 +68,7 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
  */
   function TabContextVm(counter = 1) {
     const self = this;
-    this.name = ko.observable('TAB ' + counter++);
+    this.name = ko.observable('TAB ' + counter);
     this.request = {};
     this.response = {};
 
@@ -380,16 +380,18 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
       Resting.showBookmarkDialog(false);
     };
 
-    const reset = () => {
+
+    const reset = (tabReset = true) => {
       Resting.bookmarkCopy = null;
       Resting.folderSelected('');
       Resting.folderName('--');
       Resting.bookmarkName('');
       Resting.bookmarkSelected.name('');
       Resting.bookmarkSelected.id('');
-
       clearRequest();
-      _tabReset();
+      if(tabReset) {
+        _tabReset();
+      }
       bacheca.publish('reset');
     };
 
@@ -686,7 +688,7 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
       storage.saveSettings({showFeedbackDialog : true});
     };
 
-    const activeTab = (tabActivated) => {
+    const activateTab = (tabActivated) => {
        // backup data old tab
       const previousActiveTab = _activeTab();
       previousActiveTab.request = request.makeRequest(
@@ -709,10 +711,10 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
       Resting.activeTabIndex = tabIndex;
       let bookmark = tabActivated.bookmarkSelected.toModel();
       bookmark.request = tabActivated.request;
+      reset(false);
       if(bookmark.id.length > 0) {
         loadBookmarkObj(bookmark);
       } else {
-        reset();
         parseRequest(tabActivated.request);
       }
 
@@ -727,16 +729,16 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
     const newTab = () => {
       const newTabContext = new TabContextVm(++Resting.tabCounter);
       Resting.tabContexts.push(newTabContext);
-      activeTab(newTabContext);
+      activateTab(newTabContext);
     };
 
     const removeTab = (tab) => {
       const tabIndex = Resting.tabContexts().indexOf(tab);
       if(tabIndex == Resting.activeTabIndex) {
         if(tabIndex > 0) {
-          activeTab(Resting.tabContexts()[tabIndex -1]);
+          activateTab(Resting.tabContexts()[tabIndex -1]);
         } else if(tabIndex == 0 && Resting.tabContexts().length > 1) {
-           activeTab(Resting.tabContexts()[tabIndex + 1]);
+           activateTab(Resting.tabContexts()[tabIndex + 1]);
           }
       }
       Resting.tabContexts.remove(tab);
@@ -780,7 +782,7 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
     Resting._saveBookmark = _saveBookmark;
     Resting.newTab = newTab;
     Resting.removeTab = removeTab;
-    Resting.activeTab = activeTab;
+    Resting.activateTab = activateTab;
 
     Resting.loadBookmarkInView = loadBookmarkInView;
     Resting.isBookmarkLoaded = isBookmarkLoaded;

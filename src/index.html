@@ -68,7 +68,7 @@
 
     <ul class="nav nav-tabs" data-bind="foreach: tabContexts">
       <li role="presentation" data-bind="css: {active : isActive}">
-          <a href="#" data-bind="click: $parent.activeTab"><span data-bind="text: name"></span>
+          <a href="#" data-bind="click: $parent.activateTab"><span data-bind="text: name"></span>
             <button type="button" class="btn btn-xs btn-danger" data-bind="click: $parent.removeTab, clickBubble: false">
             <span class="glyphicon glyphicon-remove"></span>
             </button>
@@ -76,7 +76,7 @@
       </li>
 
     </ul>
-    <button type="button" class="btn btn-xs btn-primary" data-bind="click: newTab">
+    <button type="button" class="btn btn-xs btn-primary" data-bind="click: newTab" title="new tab">
       <span class="glyphicon glyphicon-plus"></span>
     </button>
 
