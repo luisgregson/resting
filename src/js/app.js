@@ -66,9 +66,9 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
  * PROBLEMI con remove and active
  *
  */
-  function TabContextVm() {
+  function TabContextVm(counter = 1) {
     const self = this;
-    this.name = ko.observable('TABBB');
+    this.name = ko.observable('TAB ' + counter++);
     this.request = {};
     this.response = {};
 
@@ -91,9 +91,10 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
       contexts : ko.observableArray(),
       selectedContext: new ContextVm(),
       bookmarkSelected : new BookmarkSelectedVm(),  // bookmark loaded
+      tabCounter: 1,
       tabContexts : ko.observableArray([new TabContextVm()]),
-      request : new RequestVm(),
       activeTabIndex : 0,
+      request : new RequestVm(),
       //response : new ResponseVm(),
       bookmarkCopy: null,   // copy of bookmark object loaded
                             // used to match with modified version in _saveBookmark
@@ -724,7 +725,7 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
       return Object.keys(obj).length == 0;
     };
     const newTab = () => {
-      const newTabContext = new TabContextVm();
+      const newTabContext = new TabContextVm(++Resting.tabCounter);
       Resting.tabContexts.push(newTabContext);
       activeTab(newTabContext);
     };
