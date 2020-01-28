@@ -740,7 +740,10 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
         } else if(tabIndex == 0 && Resting.tabContexts().length > 1) {
            activateTab(Resting.tabContexts()[tabIndex + 1]);
           }
+      } else if(Resting.activeTabIndex > tabIndex) {
+          Resting.activeTabIndex--;
       }
+      
       Resting.tabContexts.remove(tab);
     };
 
