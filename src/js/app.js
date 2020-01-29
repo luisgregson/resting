@@ -691,19 +691,22 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
     const activateTab = (tabActivated) => {
        // backup data old tab
       const previousActiveTab = _activeTab();
-      previousActiveTab.request = request.makeRequest(
-        Resting.request.method(), Resting.request.url(),
-        _extractModelFromVM(Resting.request.headers()), _extractModelFromVM(Resting.request.querystring()), Resting.request.bodyType(),
-        body(Resting.request.bodyType()),_authentication(), Resting.request.context());
+      // previousActiveTab is undefined when activateTab is used
+      // in removeTab and tab removed is the active one
+      if(previousActiveTab) {
+        previousActiveTab.request = request.makeRequest(
+          Resting.request.method(), Resting.request.url(),
+          _extractModelFromVM(Resting.request.headers()), _extractModelFromVM(Resting.request.querystring()), Resting.request.bodyType(),
+          body(Resting.request.bodyType()),_authentication(), Resting.request.context());
 
-      if(Resting.bookmarkCopy) {
-        previousActiveTab.bookmarkSelected.id(Resting.bookmarkCopy.id);
-      } else {
-        previousActiveTab.bookmarkSelected.id('');
+        if(Resting.bookmarkCopy) {
+          previousActiveTab.bookmarkSelected.id(Resting.bookmarkCopy.id);
+        } else {
+          previousActiveTab.bookmarkSelected.id('');
+        }
+        previousActiveTab.bookmarkSelected.name(Resting.bookmarkName());
+        previousActiveTab.bookmarkSelected.folder(Resting.folderSelected());
       }
-      previousActiveTab.bookmarkSelected.name(Resting.bookmarkName());
-      previousActiveTab.bookmarkSelected.folder(Resting.folderSelected());
-
       const tabIndex = Resting.tabContexts().indexOf(tabActivated);
       Resting.tabContexts().forEach(function(tab, idx) {
         tab.isActive(idx == tabIndex);
@@ -740,6 +743,10 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
             ? tabToRemoveIndex
             : Resting.activeTabIndex;
       const newActiveTabIndex = (tabs + oldActiveIndex - 1) % tabs;
+      console.log(`removed ${tabToRemoveIndex}`);
+      console.log(`oldActive ${oldActiveIndex}`);
+      console.log(`active ${Resting.activeTabIndex}`);
+      console.log(`newActiveIndex ${newActiveTabIndex}`);
       activateTab(Resting.tabContexts()[newActiveTabIndex]);
       //const tabIndex = Resting.tabContexts().indexOf(tab);
       //if(tabIndex == Resting.activeTabIndex) {
