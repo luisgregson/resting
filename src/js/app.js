@@ -739,27 +739,11 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
       const tabToRemoveIndex = Resting.tabContexts().indexOf(tab);
       const [ removedTab ] = Resting.tabContexts.remove(tab);
       const tabs = Resting.tabContexts().length;
-      const oldActiveIndex = removedTab.isActive()
-            ? tabToRemoveIndex
+      const oldActiveIndex = Resting.activeTabIndex >= tabToRemoveIndex
+            ? Resting.activeTabIndex - 1
             : Resting.activeTabIndex;
-      const newActiveTabIndex = (tabs + oldActiveIndex - 1) % tabs;
-      console.log(`removed ${tabToRemoveIndex}`);
-      console.log(`oldActive ${oldActiveIndex}`);
-      console.log(`active ${Resting.activeTabIndex}`);
-      console.log(`newActiveIndex ${newActiveTabIndex}`);
+      const newActiveTabIndex = (tabs + oldActiveIndex) % tabs;
       activateTab(Resting.tabContexts()[newActiveTabIndex]);
-      //const tabIndex = Resting.tabContexts().indexOf(tab);
-      //if(tabIndex == Resting.activeTabIndex) {
-        //if(tabIndex > 0) {
-          //activateTab(Resting.tabContexts()[tabIndex -1]);
-        //} else if(tabIndex == 0 && Resting.tabContexts().length > 1) {
-           //activateTab(Resting.tabContexts()[tabIndex + 1]);
-          //}
-      //} else if(Resting.activeTabIndex > tabIndex) {
-          //Resting.activeTabIndex--;
-      //}
-
-      //Resting.tabContexts.remove(tab);
     };
 
     const _activeTab =  () => Resting.tabContexts()[Resting.activeTabIndex];
