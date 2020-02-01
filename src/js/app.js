@@ -689,6 +689,24 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
     };
 
     const activateTab = (tabActivated) => {
+      _activateTab(tabActivated, false);
+    };
+
+    const _activateTab = (tabActivated, decreaseActiveIndex = false) => {
+       const oldActiveIndex = decreaseActiveIndex
+              ? Resting.activeTabIndex - 1
+              : Resting.activeTabIndex;
+       const newActiveIndex = Resting.tabContexts().indexOf(tabActivated);
+
+       //const tabIndex = Resting.tabContexts().indexOf(tabActivated);
+       Resting.tabContexts().forEach(function(tab, idx) {
+         tab.isActive(idx == newActiveIndex);
+       });
+       Resting.activeTabIndex = newActiveIndex;
+
+       if(oldActiveIndex == newActiveIndex) {
+        return;
+       }
        // backup data old tab
       const previousActiveTab = _activeTab();
       // previousActiveTab is undefined when activateTab is used
@@ -707,11 +725,8 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
         previousActiveTab.bookmarkSelected.name(Resting.bookmarkName());
         previousActiveTab.bookmarkSelected.folder(Resting.folderSelected());
       }
-      const tabIndex = Resting.tabContexts().indexOf(tabActivated);
-      Resting.tabContexts().forEach(function(tab, idx) {
-        tab.isActive(idx == tabIndex);
-      });
-      Resting.activeTabIndex = tabIndex;
+
+      // set new active tab data
       let bookmark = tabActivated.bookmarkSelected.toModel();
       bookmark.request = tabActivated.request;
       reset(false);
@@ -732,21 +747,23 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
     const newTab = () => {
       const newTabContext = new TabContextVm(++Resting.tabCounter);
       Resting.tabContexts.push(newTabContext);
-      activateTab(newTabContext);
+      _activateTab(newTabContext);
     };
 
     const removeTab = (tab) => {
       const tabToRemoveIndex = Resting.tabContexts().indexOf(tab);
       const [ removedTab ] = Resting.tabContexts.remove(tab);
       const tabs = Resting.tabContexts().length;
-      const oldActiveIndex = Resting.activeTabIndex >= tabToRemoveIndex
+      const activeBiggerThanRemoved = Resting.activeTabIndex >= tabToRemoveIndex;
+      const oldActiveIndex = activeBiggerThanRemoved
             ? Resting.activeTabIndex - 1
             : Resting.activeTabIndex;
       const newActiveTabIndex = (tabs + oldActiveIndex) % tabs;
-      activateTab(Resting.tabContexts()[newActiveTabIndex]);
+      _activateTab(Resting.tabContexts()[newActiveTabIndex], activeBiggerThanRemoved);
     };
 
     const _activeTab =  () => Resting.tabContexts()[Resting.activeTabIndex];
+
 
    bacheca.subscribe('loadBookmark', loadBookmarkObj);
    bacheca.subscribe('addFolder', addFolder);
