@@ -708,7 +708,7 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
         return;
        }
        // backup data old tab
-      const previousActiveTab = _activeTab();
+      const previousActiveTab = Resting.tabContexts()[oldActiveIndex];
       // previousActiveTab is undefined when activateTab is used
       // in removeTab and tab removed is the active one
       if(previousActiveTab) {
