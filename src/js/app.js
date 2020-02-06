@@ -722,7 +722,7 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
         } else {
           previousActiveTab.bookmarkSelected.id('');
         }
-        previousActiveTab.bookmarkSelected.name(Resting.bookmarkName());
+        previousActiveTab.bookmarkSelected.name(Resting.bookmarkSelected.name());
         previousActiveTab.bookmarkSelected.folder(Resting.folderSelected());
       }
 
