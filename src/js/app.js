@@ -754,7 +754,7 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
       const tabToRemoveIndex = Resting.tabContexts().indexOf(tab);
       const [ removedTab ] = Resting.tabContexts.remove(tab);
       const tabs = Resting.tabContexts().length;
-      const activeBiggerThanRemoved = Resting.activeTabIndex >= tabToRemoveIndex;
+      const activeBiggerThanRemoved = Resting.activeTabIndex > tabToRemoveIndex;
       const oldActiveIndex = activeBiggerThanRemoved
             ? Resting.activeTabIndex - 1
             : Resting.activeTabIndex;
