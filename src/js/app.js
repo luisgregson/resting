@@ -689,23 +689,19 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
     };
 
     const activateTab = (tabActivated) => {
-      _activateTab(tabActivated, false);
+      _activateTab(tabActivated, Resting.activeTabIndex);
     };
 
-    const _activateTab = (tabActivated, decreaseActiveIndex = false) => {
-       const oldActiveIndex = decreaseActiveIndex
-              ? Resting.activeTabIndex - 1
-              : Resting.activeTabIndex;
+    const _activateTab = (tabActivated, oldActiveIndex = -1) => {
        const newActiveIndex = Resting.tabContexts().indexOf(tabActivated);
 
-       //const tabIndex = Resting.tabContexts().indexOf(tabActivated);
        Resting.tabContexts().forEach(function(tab, idx) {
          tab.isActive(idx == newActiveIndex);
        });
        Resting.activeTabIndex = newActiveIndex;
 
        if(oldActiveIndex == newActiveIndex) {
-        return;
+         return;
        }
        // backup data old tab
       const previousActiveTab = Resting.tabContexts()[oldActiveIndex];
@@ -747,7 +743,7 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
     const newTab = () => {
       const newTabContext = new TabContextVm(++Resting.tabCounter);
       Resting.tabContexts.push(newTabContext);
-      _activateTab(newTabContext);
+      _activateTab(newTabContext, Resting.activeTabIndex);
     };
 
     const removeTab = (tab) => {
@@ -755,11 +751,17 @@ requirejs(['jquery','app/storage','knockout','knockout-secure-binding','hjls','a
       const [ removedTab ] = Resting.tabContexts.remove(tab);
       const tabs = Resting.tabContexts().length;
       const activeBiggerThanRemoved = Resting.activeTabIndex > tabToRemoveIndex;
-      const oldActiveIndex = activeBiggerThanRemoved
-            ? Resting.activeTabIndex - 1
-            : Resting.activeTabIndex;
-      const newActiveTabIndex = (tabs + oldActiveIndex) % tabs;
-      _activateTab(Resting.tabContexts()[newActiveTabIndex], activeBiggerThanRemoved);
+      let newActiveTabIndex;
+      if(removedTab.isActive()) {
+        newActiveTabIndex = tabToRemoveIndex > 0 ? tabToRemoveIndex - 1 : 0;
+      } else {
+        if(Resting.activeTabIndex > tabToRemoveIndex) {
+          newActiveTabIndex = Resting.activeTabIndex - 1;
+        } else {
+          newActiveTabIndex = Resting.activeTabIndex;
+        }
+      }
+      _activateTab(Resting.tabContexts()[newActiveTabIndex], removedTab.isActive() ? -1 : newActiveTabIndex);
     };
 
     const _activeTab =  () => Resting.tabContexts()[Resting.activeTabIndex];
